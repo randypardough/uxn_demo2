@@ -1,0 +1,116 @@
+|00 @System [ &vector $2 &pad $6 &r $2 &g $2 &b $2 ]
+|20 @Screen [ &vector $2 &width $2 &height $2 &pad $2 &x $2 &y $2 &addr $2 &pixel $1 &sprite ]
+|80 @Controller [ &vector $2 &button $1 &key $1 ]
+|30 @Audio0 [ &vector $2 &position $2 &output $1 &pad $3 &adsr $2 &length $2 &addr $2 &volume $1 &pitch $1 ]
+
+( main program )
+|0100
+      ( set system colors )
+      #2ce9 .System/r DEO2
+      #01c0 .System/g DEO2
+      #2ce5 .System/b DEO2
+
+      ( assign controller vector )
+      ;on-controller .Controller/vector DEO2
+
+      ( set initial x,y coordinates )
+      #0008 .Screen/x DEO2
+      #0008 .Screen/y DEO2
+      ( set sprite address )
+      ;square .Screen/addr DEO2
+
+      %cleer { 
+        ;clear .Screen/addr DEO2 #00 .Screen/sprite DEO ;square .Screen/addr DEO2
+         }
+BRK
+
+@on-controller ( -> )
+      .Controller/button DEI DUP ( read and duplicate button byte )
+      #44 AND ( isolate bit 0, corresponding to Ctrl )
+      ,&fill JCN ( if the bit is not 0, jump to fill, otherwise continue )
+
+      &outline
+        #01 .Screen/sprite DEO ( draw outline )
+        ,&check-arrows JMP ( continue to check-arrows )
+
+      &fill
+        #04 .Screen/sprite DEO ( draw filled )
+
+      &check-arrows
+        ( use button byte from the stack )
+        DUP #10 AND ( isolate bit 4, corresponding to Up )
+        ,&up JCN ( jump if not 0 )
+        DUP #20 AND ( isolate bit 5, corresponding to Down )
+        ,&down JCN ( jump if not 0 )
+        DUP #40 AND ( isolate bit 6, corresponding to Left )
+        ,&left JCN ( jump if not 0 )
+        DUP #80 AND ( isolate bit 7, corresponding to Right )
+        ,&right JCN ( jump if not 0 )
+
+        POP BRK
+
+
+      &up
+       .Controller/button DEI
+        #44 AND
+        ,&jup JCN
+        cleer
+       .Screen/y DEI2 #0008 SUB2 .Screen/y DEO2 ( decrement y )
+       POP
+      BRK
+      &jup
+      .Screen/y DEI2 #0008 SUB2 .Screen/y DEO2 
+       POP 
+      BRK
+
+      &down
+        .Controller/button DEI
+        #44 AND
+        ,&jdown JCN
+        cleer
+       .Screen/y DEI2 #0008 ADD2 .Screen/y DEO2 ( increment y )
+       POP
+      BRK
+      &jdown
+      .Screen/y DEI2 #0008 ADD2 .Screen/y DEO2
+      POP 
+      BRK
+
+
+      &left
+        cleer
+       .Screen/x DEI2 #0008 SUB2 .Screen/x DEO2 ( decrement x )
+       POP
+      BRK
+
+      &right
+       cleer
+       .Screen/x DEI2 #0008 ADD2 .Screen/x DEO2 ( increment x )
+       POP
+      BRK
+
+
+
+BRK
+
+
+@square ff81 8181 8181 81ff
+@clear ffff ffff ffff ffff
+
+@sin-pcm
+	8083 8689 8c8f 9295 989b 9ea1 a4a7 aaad
+	b0b3 b6b9 bbbe c1c3 c6c9 cbce d0d2 d5d7
+	d9db dee0 e2e4 e6e7 e9eb ecee f0f1 f2f4
+	f5f6 f7f8 f9fa fbfb fcfd fdfe fefe fefe
+	fffe fefe fefe fdfd fcfb fbfa f9f8 f7f6
+	f5f4 f2f1 f0ee eceb e9e7 e6e4 e2e0 dedb
+	d9d7 d5d2 d0ce cbc9 c6c3 c1be bbb9 b6b3
+	b0ad aaa7 a4a1 9e9b 9895 928f 8c89 8683
+	807d 7a77 7471 6e6b 6865 625f 5c59 5653
+	504d 4a47 4542 3f3d 3a37 3532 302e 2b29
+	2725 2220 1e1c 1a19 1715 1412 100f 0e0c
+	0b0a 0908 0706 0505 0403 0302 0202 0202
+	0102 0202 0202 0303 0405 0506 0708 090a
+	0b0c 0e0f 1012 1415 1719 1a1c 1e20 2225
+	2729 2b2e 3032 3537 3a3d 3f42 4547 4a4d
+	5053 5659 5c5f 6265 686b 6e71 7477 7a7d
